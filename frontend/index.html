@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MovieVerse 3D – Immersive Movie Ticket Booking Platform</title>
+  </head>
+  <body className="bg-[#07080E]">
+    <div id="root">
+      <script>
+        // Redirect if opened via Live Server (port 5500 / 8080 without vite)
+        if (window.location.port === '5500' || window.location.protocol === 'file:') {
+          window.location.href = 'http://localhost:5173';
+        }
+      </script>
+    </div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
+
