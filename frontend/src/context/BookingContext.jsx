@@ -1,6 +1,5 @@
-import React, { createContext, useContext, useState } from 'react';
-
-const BookingContext = createContext();
+import React, { useState } from 'react';
+import { BookingContext } from './bookingContext';
 
 export const BookingProvider = ({ children }) => {
   const [selectedMovie, setSelectedMovie] = useState(null);
@@ -11,22 +10,15 @@ export const BookingProvider = ({ children }) => {
   const [selectedFood, setSelectedFood] = useState({});
   const [activeTicket, setActiveTicket] = useState(null);
 
-  // Seat toggle helper
   const toggleSeat = (seatId) => {
-    setSelectedSeats(prev => {
-      if (prev.includes(seatId)) {
-        return prev.filter(id => id !== seatId);
-      } else {
-        return [...prev, seatId];
-      }
-    });
+    setSelectedSeats(prev => prev.includes(seatId)
+      ? prev.filter(id => id !== seatId)
+      : [...prev, seatId]);
   };
 
-  // Food quantity modifier helper
   const updateFoodQty = (foodId, delta) => {
     setSelectedFood(prev => {
-      const current = prev[foodId] || 0;
-      const updated = Math.max(0, current + delta);
+      const updated = Math.max(0, (prev[foodId] || 0) + delta);
       if (updated === 0) {
         const copy = { ...prev };
         delete copy[foodId];
@@ -37,11 +29,15 @@ export const BookingProvider = ({ children }) => {
   };
 
   const clearBooking = () => {
+    const today = new Date();
+    today.setMinutes(today.getMinutes() - today.getTimezoneOffset());
     setSelectedMovie(null);
     setSelectedTheater(null);
     setSelectedShowtime(null);
+    setSelectedDate(today.toISOString().slice(0, 10));
     setSelectedSeats([]);
     setSelectedFood({});
+    setActiveTicket(null);
   };
 
   return (
@@ -59,5 +55,3 @@ export const BookingProvider = ({ children }) => {
     </BookingContext.Provider>
   );
 };
-
-export const useBooking = () => useContext(BookingContext);

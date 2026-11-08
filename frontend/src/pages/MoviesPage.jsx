@@ -61,11 +61,13 @@ export function MoviesPage({ movies, onSelectMovie }) {
 
       {/* Movies Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredMovies.map(movie => (
+        {filteredMovies.map(movie => {
+          const canBook = movie.status === 'NOW_SHOWING';
+          return (
           <div
             key={movie.id}
-            onClick={() => onSelectMovie(movie)}
-            className="group relative rounded-3xl overflow-hidden glass-panel border border-slate-800 hover:border-cyan-500/50 transition-all hover:-translate-y-2 cursor-pointer shadow-xl flex flex-col"
+            onClick={() => canBook && onSelectMovie(movie)}
+            className={`group relative rounded-3xl overflow-hidden glass-panel border border-slate-800 transition-all shadow-xl flex flex-col ${canBook ? 'hover:border-cyan-500/50 hover:-translate-y-2 cursor-pointer' : 'opacity-80 cursor-not-allowed'}`}
           >
             <div className="relative h-96 overflow-hidden">
               <img
@@ -75,8 +77,8 @@ export function MoviesPage({ movies, onSelectMovie }) {
               />
               <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent" />
               
-              <div className="absolute top-4 left-4 px-3 py-1 rounded-lg bg-cyan-500 text-slate-950 font-black text-xs tracking-wider uppercase">
-                3D IMAX
+              <div className={`absolute top-4 left-4 px-3 py-1 rounded-lg font-black text-xs tracking-wider uppercase ${canBook ? 'bg-cyan-500 text-slate-950' : 'bg-purple-500 text-white'}`}>
+                {canBook ? '3D IMAX' : 'Coming Soon'}
               </div>
 
               <div className="absolute top-4 right-4 flex items-center gap-1 px-3 py-1 rounded-lg bg-slate-900/90 backdrop-blur-md text-yellow-400 text-xs font-bold border border-slate-700">
@@ -93,12 +95,16 @@ export function MoviesPage({ movies, onSelectMovie }) {
                 <p className="text-xs text-gray-300 mt-2 line-clamp-2 leading-relaxed">{movie.synopsis}</p>
               </div>
 
-              <button className="w-full py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-purple-600 font-bold text-xs text-white transition-all flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/20">
-                <Monitor className="w-4 h-4" /> Select & Book 3D Seats
+              <button
+                disabled={!canBook}
+                className="w-full py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-purple-600 font-bold text-xs text-white transition-all flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/20 disabled:from-slate-700 disabled:to-slate-700 disabled:shadow-none disabled:cursor-not-allowed"
+              >
+                <Monitor className="w-4 h-4" /> {canBook ? 'Select & Book 3D Seats' : 'Not yet available'}
               </button>
             </div>
           </div>
-        ))}
+          );
+        })}
       </div>
 
     </div>

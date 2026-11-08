@@ -3,15 +3,21 @@ import { Canvas } from '@react-three/fiber';
 import { CinemaHall3D } from '../3d/CinemaHall3D';
 import { Food3DBar } from '../3d/Food3DBar';
 import { INITIAL_THEATERS, SHOWTIMES, FOOD_ITEMS } from '../services/mockData';
-import { useBooking } from '../context/BookingContext';
-import { useAuth } from '../context/AuthContext';
+import { useBooking } from '../context/useBooking';
+import { useAuth } from '../context/useAuth';
 import { api } from '../services/api';
 import { TicketModal } from '../components/TicketModal';
 import { audioService } from '../services/audioService';
 import {
-  MapPin, Calendar, Clock, Armchair, ShoppingBag, CreditCard, CheckCircle,
-  Camera, Plus, Minus, ShieldCheck, Sparkles, ChevronRight, ArrowLeft
+  MapPin, Calendar, Clock, ShoppingBag, CreditCard,
+  Camera, Plus, Minus, ShieldCheck, ChevronRight, ArrowLeft, AlertTriangle
 } from 'lucide-react';
+
+const getLocalDate = () => {
+  const date = new Date();
+  date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
+  return date.toISOString().slice(0, 10);
+};
 
 export function BookingFlowPage({ movie, onBack }) {
   const { addTicketToHistory } = useAuth();
@@ -24,7 +30,7 @@ export function BookingFlowPage({ movie, onBack }) {
 
   const [step, setStep] = useState(1); // 1: Time/Location, 2: 3D Seats, 3: Food 3D, 4: Payment
   const [selectedTheater, setSelectedTheater] = useState(INITIAL_THEATERS[0]);
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [selectedDate, setSelectedDate] = useState(getLocalDate);
   const [selectedShowtime, setSelectedShowtime] = useState(SHOWTIMES[2]); // 06:15 PM
   const [cameraMode, setCameraMode] = useState('overview'); // 'overview' | 'screen' | 'vip'
   const [activeFoodModel, setActiveFoodModel] = useState('popcorn');
@@ -32,8 +38,8 @@ export function BookingFlowPage({ movie, onBack }) {
   // Payment state
   const [couponCode, setCouponCode] = useState('');
   const [discount, setDiscount] = useState(0);
-  const [cardNumber, setCardNumber] = useState('4532 •••• •••• 8892');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [bookingError, setBookingError] = useState('');
 
   // Seat Price calculation
   const seatTotal = selectedSeats.reduce((acc, seatId) => {
@@ -60,8 +66,31 @@ export function BookingFlowPage({ movie, onBack }) {
     }
   };
 
-  const handleSeatToggle = (seatId, price) => {
+  const handleSeatToggle = (seatId) => {
     toggleSeat(seatId);
+  };
+
+  const getBookingPayload = () => {
+    const foodSummary = Object.entries(selectedFood)
+      .map(([foodId, qty]) => {
+        const item = FOOD_ITEMS.find(food => food.id === foodId);
+        return item ? `${item.name} x${qty}` : null;
+      })
+      .filter(Boolean)
+      .join(', ') || 'None';
+
+    return {
+      movieId: movie.id,
+      movieTitle: movie.title,
+      theaterId: selectedTheater.id,
+      theaterName: selectedTheater.name,
+      showtimeId: selectedShowtime.id,
+      showtime: selectedShowtime.time,
+      date: selectedDate,
+      seats: selectedSeats,
+      foodSummary,
+      totalPrice: grandTotal
+    };
   };
 
   const handleCheckout = async () => {
@@ -71,29 +100,29 @@ export function BookingFlowPage({ movie, onBack }) {
     }
 
     setIsProcessing(true);
-    audioService.playSuccessBeep();
+    setBookingError('');
+    try {
+      const newTicket = await api.createBooking(getBookingPayload());
+      audioService.playSuccessBeep();
+      addTicketToHistory(newTicket);
+      setActiveTicket(newTicket);
+    } catch (error) {
+      setBookingError(error.message || 'Booking could not be completed.');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
 
-    // Prepare food summary string
-    const foodSummaryArray = Object.entries(selectedFood).map(([foodId, qty]) => {
-      const item = FOOD_ITEMS.find(f => f.id === foodId);
-      return `${item.name} x${qty}`;
-    });
-    const foodSummary = foodSummaryArray.length > 0 ? foodSummaryArray.join(', ') : 'None';
+  const handleDemoTicket = () => {
+    const demoTicket = api.createDemoBooking(getBookingPayload());
+    addTicketToHistory(demoTicket);
+    setActiveTicket(demoTicket);
+    setBookingError('');
+  };
 
-    const bookingPayload = {
-      movieTitle: movie.title,
-      theaterName: selectedTheater.name,
-      showtime: selectedShowtime.time,
-      date: selectedDate,
-      seats: selectedSeats,
-      foodSummary,
-      totalPrice: grandTotal
-    };
-
-    const newTicket = await api.createBooking(bookingPayload);
-    setIsProcessing(false);
-    addTicketToHistory(newTicket);
-    setActiveTicket(newTicket);
+  const handleCancel = () => {
+    clearBooking();
+    onBack();
   };
 
   return (
@@ -103,7 +132,7 @@ export function BookingFlowPage({ movie, onBack }) {
       <div className="glass-panel p-6 rounded-3xl flex flex-col md:flex-row items-center justify-between gap-4 border border-cyan-500/20">
         <div className="flex items-center gap-4">
           <button
-            onClick={onBack}
+            onClick={handleCancel}
             className="p-2.5 rounded-2xl bg-slate-900 border border-slate-700 hover:border-cyan-400 text-gray-300"
           >
             <ArrowLeft className="w-5 h-5" />
@@ -124,7 +153,7 @@ export function BookingFlowPage({ movie, onBack }) {
             { id: 1, label: 'Location & Time' },
             { id: 2, label: '3D Seat Selector' },
             { id: 3, label: '3D Concessions' },
-            { id: 4, label: 'Payment' }
+            { id: 4, label: 'Demo Checkout' }
           ].map(s => (
             <button
               key={s.id}
@@ -172,6 +201,20 @@ export function BookingFlowPage({ movie, onBack }) {
                   </div>
                 </div>
               ))}
+            </div>
+
+            <div className="pt-4 border-t border-slate-800 space-y-2">
+              <label htmlFor="booking-date" className="text-sm font-bold text-white flex items-center gap-2">
+                <Calendar className="w-4 h-4 text-cyan-400" /> Select Booking Date
+              </label>
+              <input
+                id="booking-date"
+                type="date"
+                value={selectedDate}
+                min={getLocalDate()}
+                onChange={event => setSelectedDate(event.target.value)}
+                className="w-full md:w-auto bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-cyan-400"
+              />
             </div>
 
             {/* Showtime Selection */}
@@ -235,7 +278,6 @@ export function BookingFlowPage({ movie, onBack }) {
           <div className="relative w-full h-[520px] rounded-3xl overflow-hidden glass-panel-neon border border-cyan-500/30">
             <Canvas className="w-full h-full">
               <CinemaHall3D
-                selectedMovie={movie}
                 selectedSeats={selectedSeats}
                 onSeatToggle={handleSeatToggle}
                 cameraMode={cameraMode}
@@ -267,7 +309,7 @@ export function BookingFlowPage({ movie, onBack }) {
             <div className="absolute bottom-4 left-4 z-20 glass-panel px-4 py-2 rounded-2xl flex items-center gap-4 text-xs">
               <div className="flex items-center gap-1.5">
                 <span className="w-3.5 h-3.5 rounded-full bg-emerald-500 shadow-sm shadow-emerald-500/50" />
-                <span className="text-gray-300">Available</span>
+                <span className="text-gray-300">Sample available</span>
               </div>
               <div className="flex items-center gap-1.5">
                 <span className="w-3.5 h-3.5 rounded-full bg-red-600" />
@@ -422,7 +464,7 @@ export function BookingFlowPage({ movie, onBack }) {
                   onClick={() => setStep(4)}
                   className="w-2/3 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-purple-600 text-xs font-bold text-white shadow-lg shadow-cyan-500/20"
                 >
-                  Proceed to Payment <ChevronRight className="w-4 h-4 inline ml-1" />
+                  Proceed to Demo Checkout <ChevronRight className="w-4 h-4 inline ml-1" />
                 </button>
               </div>
             </div>
@@ -431,12 +473,15 @@ export function BookingFlowPage({ movie, onBack }) {
         </div>
       )}
 
-      {/* STEP 4: CHECKOUT & PAYMENT SIMULATION */}
+      {/* STEP 4: DEMO CHECKOUT */}
       {step === 4 && (
         <div className="max-w-2xl mx-auto glass-panel p-8 rounded-3xl space-y-6 border border-cyan-500/30">
           <h3 className="text-2xl font-black text-white flex items-center gap-2">
-            <CreditCard className="w-6 h-6 text-cyan-400" /> Payment & Pass Checkout
+            <CreditCard className="w-6 h-6 text-cyan-400" /> Demo Booking Checkout
           </h3>
+          <p className="text-xs text-amber-300 bg-amber-500/10 border border-amber-500/30 rounded-xl px-4 py-3">
+            Demo checkout only. No real card is charged, and generated demo passes are not valid for cinema entry.
+          </p>
 
           {/* Booking Recap */}
           <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800 space-y-2 text-xs">
@@ -483,10 +528,10 @@ export function BookingFlowPage({ movie, onBack }) {
               <span>MOVIEVERSE CINEMA PASS</span>
               <span className="font-bold text-yellow-300">VISA DEBIT</span>
             </div>
-            <div className="text-lg font-mono tracking-wider py-2">{cardNumber}</div>
+            <div className="text-lg font-mono tracking-wider py-2">DEMO PAYMENT • NO CHARGE</div>
             <div className="flex justify-between text-[11px] font-mono text-cyan-200">
-              <div>CARDHOLDER: ALEX VANCE</div>
-              <div>EXP: 12/28</div>
+              <div>CARDHOLDER: DEMO USER</div>
+              <div>NO CHARGE</div>
             </div>
           </div>
 
@@ -512,7 +557,7 @@ export function BookingFlowPage({ movie, onBack }) {
             </div>
           </div>
 
-          {/* Confirm & Pay Button */}
+          {/* Request a demo booking from the API */}
           <button
             onClick={handleCheckout}
             disabled={isProcessing}
@@ -522,10 +567,23 @@ export function BookingFlowPage({ movie, onBack }) {
               <span className="animate-spin border-2 border-white border-t-transparent rounded-full w-5 h-5" />
             ) : (
               <>
-                <ShieldCheck className="w-5 h-5" /> Confirm Payment & Generate 3D QR Ticket
+                <ShieldCheck className="w-5 h-5" /> Create Demo Booking & QR Pass
               </>
             )}
           </button>
+
+          {bookingError && (
+            <div role="alert" className="space-y-3 rounded-xl border border-amber-500/40 bg-amber-500/10 p-4 text-xs text-amber-200">
+              <p className="flex items-start gap-2"><AlertTriangle className="h-4 w-4 shrink-0" />{bookingError}</p>
+              <button
+                type="button"
+                onClick={handleDemoTicket}
+                className="rounded-lg border border-amber-400/40 px-3 py-2 font-semibold text-white hover:bg-amber-400/10"
+              >
+                Generate demo-only pass (no booking or payment)
+              </button>
+            </div>
+          )}
         </div>
       )}
 
@@ -533,10 +591,10 @@ export function BookingFlowPage({ movie, onBack }) {
       {activeTicket && (
         <TicketModal
           ticket={activeTicket}
-          onClose={() => {
-            setActiveTicket(null);
-            clearBooking();
-            onBack();
+            onClose={() => {
+              setActiveTicket(null);
+              clearBooking();
+              onBack();
           }}
         />
       )}

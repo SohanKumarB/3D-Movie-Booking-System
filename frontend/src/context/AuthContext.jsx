@@ -1,13 +1,12 @@
-import React, { createContext, useContext, useState } from 'react';
-
-const AuthContext = createContext();
+import React, { useState } from 'react';
+import { AuthContext } from './authContext';
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState({
     username: 'alex_cinephile',
     fullName: 'Alex Vance',
     email: 'alex@movieverse.com',
-    role: 'ROLE_USER', // ROLE_USER or ROLE_ADMIN
+    role: 'ROLE_USER',
     rewardPoints: 240,
     avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80'
   });
@@ -28,7 +27,7 @@ export const AuthProvider = ({ children }) => {
   const loginAsAdmin = () => {
     setUser({
       username: 'admin_master',
-      fullName: 'Cinema Director (Admin)',
+      fullName: 'Cinema Director (Demo Admin)',
       email: 'admin@movieverse.com',
       role: 'ROLE_ADMIN',
       rewardPoints: 9999,
@@ -38,8 +37,9 @@ export const AuthProvider = ({ children }) => {
 
   const addTicketToHistory = (ticket) => {
     setSavedTickets(prev => [ticket, ...prev]);
-    // award loyalty points
-    setUser(prev => ({ ...prev, rewardPoints: prev.rewardPoints + 50 }));
+    if (ticket.paymentStatus === 'PAID') {
+      setUser(prev => ({ ...prev, rewardPoints: prev.rewardPoints + 50 }));
+    }
   };
 
   return (
@@ -48,5 +48,3 @@ export const AuthProvider = ({ children }) => {
     </AuthContext.Provider>
   );
 };
-
-export const useAuth = () => useContext(AuthContext);

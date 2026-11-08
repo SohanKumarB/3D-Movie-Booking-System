@@ -25,7 +25,7 @@ export function HomePage({ movies, onSelectMovie, onNavigate }) {
             STEP INSIDE THE <span className="text-neon-cyan">FUTURE</span> OF CINEMA
           </h1>
           <p className="text-sm text-gray-300">
-            Interactive 3D Virtual Lobby • Real-time 3D Seat Selection • Spatial Audio
+            Interactive 3D Virtual Lobby • Sample Seat Selection • Spatial Audio
           </p>
         </div>
 
@@ -121,8 +121,8 @@ export function HomePage({ movies, onSelectMovie, onNavigate }) {
           <div className="p-3 w-fit rounded-xl bg-pink-500/20 text-pink-400">
             <ShieldCheck className="w-6 h-6" />
           </div>
-          <h4 className="font-bold text-white text-lg">Instant QR Digital Ticket</h4>
-          <p className="text-xs text-gray-400">Encrypted digital passes generated instantly with scannable QR code for zero-wait entrance.</p>
+          <h4 className="font-bold text-white text-lg">Demo QR Pass</h4>
+          <p className="text-xs text-gray-400">Preview a QR-style pass for the booking flow. Demo passes are not valid for cinema entry.</p>
         </div>
       </section>
 

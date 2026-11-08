@@ -4,7 +4,6 @@ import { Seat3D } from './Seat3D';
 import { audioService } from '../services/audioService';
 
 export function CinemaHall3D({
-  selectedMovie,
   selectedSeats,
   onSeatToggle,
   cameraMode = 'overview' // 'overview' | 'screen' | 'vip'
@@ -161,8 +160,6 @@ export function CinemaHall3D({
             <Seat3D
               key={seatId}
               id={seatId}
-              row={rowSymbol}
-              col={colNum}
               position={[xPos, yElev, zPos]}
               status={status}
               price={seatPrice}

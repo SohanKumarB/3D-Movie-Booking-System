@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Film, MapPin, Sparkles, UserCheck, ShieldCheck, Volume2, VolumeX, CloudRain, Search } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
+import { Film, MapPin, Sparkles, UserCheck, ShieldCheck, Volume2, VolumeX, CloudRain } from 'lucide-react';
+import { useAuth } from '../context/useAuth';
 import { audioService } from '../services/audioService';
 
 export function Navbar({ onNavigate, currentPage, onToggleRain, isRainActive }) {
@@ -103,17 +103,18 @@ export function Navbar({ onNavigate, currentPage, onToggleRain, isRainActive }) 
           {/* Role Switcher */}
           <button
             onClick={() => user.role === 'ROLE_USER' ? loginAsAdmin() : loginAsUser()}
+            title="Switch demo role; this is not an authenticated account"
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-slate-800 to-slate-900 border border-slate-700 hover:border-cyan-500/50 text-xs font-semibold text-gray-200 transition-all"
           >
             {user.role === 'ROLE_ADMIN' ? (
               <>
                 <ShieldCheck className="w-3.5 h-3.5 text-pink-400" />
-                <span>Admin</span>
+                <span>Demo Admin</span>
               </>
             ) : (
               <>
                 <UserCheck className="w-3.5 h-3.5 text-cyan-400" />
-                <span>User</span>
+                <span>Demo User</span>
               </>
             )}
           </button>

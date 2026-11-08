@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { useAuth } from '../context/AuthContext';
-import { User, Award, Ticket, Star, QrCode } from 'lucide-react';
+import { useAuth } from '../context/useAuth';
+import { Award, Ticket, QrCode } from 'lucide-react';
 import { TicketModal } from '../components/TicketModal';
 
 export function ProfilePage() {
@@ -29,7 +29,7 @@ export function ProfilePage() {
           <div>
             <div className="text-[10px] text-gray-400 uppercase tracking-widest">MovieVerse Rewards</div>
             <div className="text-2xl font-black text-purple-400">{user.rewardPoints} Points</div>
-            <div className="text-[10px] text-gray-400">Earn 50 pts per ticket booked</div>
+            <div className="text-[10px] text-gray-400">Demo passes do not earn points</div>
           </div>
         </div>
       </div>
@@ -37,7 +37,7 @@ export function ProfilePage() {
       {/* Booking History Section */}
       <div className="space-y-4">
         <h3 className="text-xl font-extrabold text-white flex items-center gap-2">
-          <Ticket className="w-5 h-5 text-cyan-400" /> Your Digital Cinema Passes ({savedTickets.length})
+          <Ticket className="w-5 h-5 text-cyan-400" /> Your Saved Demo Passes ({savedTickets.length})
         </h3>
 
         {savedTickets.length === 0 ? (

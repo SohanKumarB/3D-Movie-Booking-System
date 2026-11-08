@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import confetti from 'canvas-confetti';
-import { CheckCircle2, Download, Printer, Copy, Sparkles, X, Film, MapPin, Calendar, Clock, Armchair } from 'lucide-react';
+import { CheckCircle2, Printer, Copy, Sparkles, X, Film, MapPin, Calendar, Clock, Armchair } from 'lucide-react';
 
 export function TicketModal({ ticket, onClose }) {
   useEffect(() => {
@@ -15,9 +15,18 @@ export function TicketModal({ ticket, onClose }) {
 
   if (!ticket) return null;
 
+  const isDemo = ticket.paymentStatus !== 'PAID';
+
   const copyRefCode = () => {
-    navigator.clipboard.writeText(ticket.bookingReference || 'MV-BOOKING-ID');
-    alert('Booking Reference copied to clipboard!');
+    const reference = ticket.bookingReference || 'MV-BOOKING-ID';
+    const clipboardWrite = navigator.clipboard?.writeText;
+    if (!clipboardWrite) {
+      alert(`Reference: ${reference}`);
+      return;
+    }
+    clipboardWrite.call(navigator.clipboard, reference)
+      .then(() => alert('Reference copied to clipboard!'))
+      .catch(() => alert(`Reference: ${reference}`));
   };
 
   const handlePrint = () => {
@@ -37,7 +46,7 @@ export function TicketModal({ ticket, onClose }) {
             <X className="w-5 h-5" />
           </button>
           <div className="flex items-center justify-center gap-1.5 text-xs font-bold text-cyan-200 uppercase tracking-widest">
-            <Sparkles className="w-4 h-4 text-yellow-300" /> Official Cinema Pass
+            <Sparkles className="w-4 h-4 text-yellow-300" /> {isDemo ? 'Demo Cinema Pass' : 'Official Cinema Pass'}
           </div>
           <h3 className="text-xl font-black text-white tracking-wide mt-1">MOVIEVERSE 3D</h3>
         </div>
@@ -45,17 +54,18 @@ export function TicketModal({ ticket, onClose }) {
         {/* Ticket Details Body */}
         <div className="p-6 space-y-5">
           
-          {/* Success Status */}
-          <div className="flex items-center gap-3 p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400">
+          {/* Pass Status */}
+          <div className={`flex items-center gap-3 p-3 rounded-2xl border ${isDemo ? 'bg-amber-500/10 border-amber-500/30 text-amber-300' : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'}`}>
             <CheckCircle2 className="w-6 h-6 flex-shrink-0" />
             <div>
-              <div className="font-bold text-sm">Booking Confirmed!</div>
-              <div className="text-[11px] text-emerald-300/80">Reference: {ticket.bookingReference}</div>
+              <div className="font-bold text-sm">{isDemo ? 'Demo pass generated' : 'Booking confirmed'}</div>
+              <div className="text-[11px]">Reference: {ticket.bookingReference}</div>
+              {isDemo && <div className="text-[10px] mt-1">Not a reservation or valid cinema ticket.</div>}
             </div>
             <button
               onClick={copyRefCode}
               title="Copy Booking Reference"
-              className="ml-auto p-1.5 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/40 text-emerald-300"
+              className="ml-auto p-1.5 rounded-lg bg-slate-900/40 hover:bg-slate-900/70 text-current"
             >
               <Copy className="w-4 h-4" />
             </button>
@@ -104,14 +114,14 @@ export function TicketModal({ ticket, onClose }) {
               includeMargin={true}
             />
             <div className="text-[10px] font-mono tracking-widest text-slate-700">
-              SCAN AT SCREEN ENTRANCE
+              {isDemo ? 'DEMO QR · NOT VALID FOR ENTRY' : 'SCAN AT SCREEN ENTRANCE'}
             </div>
           </div>
 
           {/* Price & Action Buttons */}
           <div className="flex items-center justify-between pt-2 border-t border-slate-800">
             <div>
-              <span className="text-[10px] text-gray-400 uppercase tracking-wider block">Total Paid</span>
+                <span className="text-[10px] text-gray-400 uppercase tracking-wider block">{isDemo ? 'Demo total · not charged' : 'Total Paid'}</span>
               <span className="text-2xl font-black text-neon-cyan">${Number(ticket.totalPrice).toFixed(2)}</span>
             </div>
 

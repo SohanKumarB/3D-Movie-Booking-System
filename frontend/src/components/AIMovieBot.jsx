@@ -6,7 +6,7 @@ export function AIMovieBot({ movies, onSelectMovie }) {
   const [messages, setMessages] = useState([
     {
       sender: 'bot',
-      text: '🍿 Hello cinephile! I am MovieBot AI. Tell me your mood or favorite genre, and I will recommend the ultimate 3D cinema experience!'
+      text: '🍿 Hello cinephile! I am MovieBot, a local demo recommender. Tell me your mood or favorite genre and I will suggest a movie!'
     }
   ]);
   const [input, setInput] = useState('');
@@ -21,14 +21,23 @@ export function AIMovieBot({ movies, onSelectMovie }) {
 
     // AI recommendation logic simulation
     setTimeout(() => {
-      let recMovie = movies[0];
+      const availableMovies = movies.filter(movie => movie.status === 'NOW_SHOWING');
+      if (!availableMovies.length) {
+        setMessages(prev => [...prev, {
+          sender: 'bot',
+          text: 'There are no currently bookable movies in the catalog right now. Please check back later.'
+        }]);
+        return;
+      }
+
+      let recMovie = availableMovies[0];
       const lower = query.toLowerCase();
       if (lower.includes('dark') || lower.includes('batman') || lower.includes('crime')) {
-        recMovie = movies.find(m => m.title.includes('Batman')) || movies[1];
+        recMovie = availableMovies.find(movie => movie.title.toLowerCase().includes('batman')) || recMovie;
       } else if (lower.includes('space') || lower.includes('time') || lower.includes('nolan')) {
-        recMovie = movies.find(m => m.title.includes('Interstellar')) || movies[2];
+        recMovie = availableMovies.find(movie => movie.title.toLowerCase().includes('interstellar')) || recMovie;
       } else if (lower.includes('avatar') || lower.includes('alien') || lower.includes('nature')) {
-        recMovie = movies.find(m => m.title.includes('Avatar')) || movies[3];
+        recMovie = availableMovies.find(movie => movie.title.toLowerCase().includes('avatar')) || recMovie;
       } else if (lower.includes('action') || lower.includes('marvel') || lower.includes('avengers')) {
         recMovie = movies[0];
       }
@@ -66,9 +75,9 @@ export function AIMovieBot({ movies, onSelectMovie }) {
               </div>
               <div>
                 <h4 className="font-bold text-white text-sm flex items-center gap-1">
-                  MovieBot AI <Sparkles className="w-3.5 h-3.5 text-yellow-400" />
+                  MovieBot Demo <Sparkles className="w-3.5 h-3.5 text-yellow-400" />
                 </h4>
-                <p className="text-[10px] text-cyan-300">Powered by MovieVerse Neural Engine</p>
+                <p className="text-[10px] text-cyan-300">Local sample recommendations</p>
               </div>
             </div>
             <button

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { DollarSign, Ticket, Film, ShieldCheck, Plus, Lock, Users, BarChart3, Trash2 } from 'lucide-react';
+import { Film, Plus, Trash2 } from 'lucide-react';
 
 export function AdminPage({ movies, setMovies }) {
   const [newTitle, setNewTitle] = useState('');
@@ -34,6 +34,9 @@ export function AdminPage({ movies, setMovies }) {
 
   return (
     <div className="space-y-8 pb-16">
+      <p className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-xs text-amber-200">
+        Demo admin preview only. Metrics are sample values, catalog edits stay in this browser session, and this screen is not protected by real authentication.
+      </p>
       
       {/* Dashboard Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">

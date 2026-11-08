@@ -2,8 +2,6 @@ import React, { useRef, useState } from 'react';
 
 export function Seat3D({
   id,
-  row,
-  col,
   position,
   status, // 'available' | 'booked' | 'selected' | 'vip'
   price,
